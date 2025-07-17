@@ -13,14 +13,12 @@
       padding: 0;
       text-align: center;
     }
-
     h1 {
       padding: 20px;
       margin: 0;
       background: #000;
       font-size: 1.8rem;
     }
-
     /* Top buttons */
     .top-buttons {
       display: flex;
@@ -42,7 +40,6 @@
     .top-buttons a:hover {
       background: #772ce8;
     }
-
     /* Tabs */
     .tabs {
       display: flex;
@@ -65,7 +62,6 @@
       border-color: #9147ff;
       color: #9147ff;
     }
-
     /* Player container */
     .player {
       display: none;
@@ -76,16 +72,14 @@
     .player.active {
       display: block;
     }
-
     /* Twitch iframe responsive */
     iframe {
       width: 100%;
-      height: 60vh; /* adjusts for mobile */
+      height: 60vh;
       min-height: 300px;
       border: none;
       border-radius: 8px;
     }
-
     /* Mobile tweaks */
     @media (max-width: 600px) {
       .tab {
@@ -115,43 +109,99 @@
     <a href="https://www.denverracingsocial.com/mrutoday" target="_blank">📊 Mobile Unit Leaderboard & Queue Signup</a>
   </div>
 
-  <!-- Tabs (Reordered: Main Broadcast → Clubhouses → Mobile Unit) -->
+  <!-- Tabs -->
   <div class="tabs">
-    <div class="tab active" data-target="broadcast">🎥 DRS Main Broadcast</div>
+    <div class="tab" data-target="broadcast">🎥 DRS Main Broadcast</div>
     <div class="tab" data-target="centennial">🏎️ Centennial Clubhouse</div>
     <div class="tab" data-target="lafayette">🏁 Lafayette Clubhouse</div>
     <div class="tab" data-target="mu1">🚚 Mobile Racing Unit</div>
   </div>
 
   <!-- Twitch Players -->
-  <div id="broadcast" class="player active">
+  <div id="broadcast" class="player">
     <iframe src="https://player.twitch.tv/?channel=denverracingsocial&parent=denverracingsocial.github.io" allowfullscreen></iframe>
   </div>
-
   <div id="centennial" class="player">
     <iframe src="https://player.twitch.tv/?channel=drscentennial&parent=denverracingsocial.github.io" allowfullscreen></iframe>
   </div>
-
   <div id="lafayette" class="player">
     <iframe src="https://player.twitch.tv/?channel=drswatsonmills&parent=denverracingsocial.github.io" allowfullscreen></iframe>
   </div>
-
   <div id="mu1" class="player">
     <iframe src="https://player.twitch.tv/?channel=denverracingsocialmu1&parent=denverracingsocial.github.io" allowfullscreen></iframe>
   </div>
 
   <script>
+    const channels = [
+      {id: "denverracingsocial", target: "broadcast"},
+      {id: "drscentennial", target: "centennial"},
+      {id: "drswatsonmills", target: "lafayette"},
+      {id: "denverracingsocialmu1", target: "mu1"}
+    ];
+
     const tabs = document.querySelectorAll('.tab');
     const players = document.querySelectorAll('.player');
 
+    function activateTab(targetId) {
+      tabs.forEach(t => t.classList.remove('active'));
+      players.forEach(p => p.classList.remove('active'));
+      document.querySelector(`.tab[data-target="${targetId}"]`).classList.add('active');
+      document.getElementById(targetId).classList.add('active');
+    }
+
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        players.forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.target).classList.add('active');
+        activateTab(tab.dataset.target);
       });
     });
+
+    // Twitch API Auto-Detect Live Streams
+    async function checkLiveChannels() {
+      const clientId = "6lwz7yvyfmlccmybi4vkbqhootlyrw";  // <-- Your Client ID
+      const clientSecret = "jr8in3gfdb4sg26mdhrbqrz6lu16dc";         // <-- Replace with your Client Secret
+
+      try {
+        // Get App Access Token
+        const tokenRes = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`, {method: "POST"});
+        const tokenData = await tokenRes.json();
+        const accessToken = tokenData.access_token;
+
+        // Build query for all channels
+        const loginParams = channels.map(c => `user_login=${c.id}`).join("&");
+
+        const liveRes = await fetch(`https://api.twitch.tv/helix/streams?${loginParams}`, {
+          headers: {
+            "Client-ID": clientId,
+            "Authorization": `Bearer ${accessToken}`
+          }
+        });
+
+        const liveData = await liveRes.json();
+        const liveIds = new Set(liveData.data.map(s => s.user_login));
+
+        // Find the first live channel by priority
+        let liveTarget = null;
+        for (let c of channels) {
+          if (liveIds.has(c.id)) {
+            liveTarget = c.target;
+            break;
+          }
+        }
+
+        if (liveTarget) {
+          activateTab(liveTarget);
+        } else {
+          activateTab("broadcast"); // default if none live
+        }
+
+      } catch (err) {
+        console.error("Twitch API Error:", err);
+        activateTab("broadcast"); // fallback
+      }
+    }
+
+    // Run live check on load
+    checkLiveChannels();
   </script>
 </body>
 </html>
