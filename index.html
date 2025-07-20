@@ -8,7 +8,7 @@
     /* Base styles */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-      background: #f9f9f9; /* clean light grey */
+      background: #f9f9f9;
       color: #333;
       margin: 0;
       padding: 0;
@@ -34,7 +34,7 @@
       color: #111;
     }
 
-    /* Top buttons (clean + upscale) */
+    /* Top buttons */
     .top-buttons {
       display: flex;
       flex-wrap: wrap;
@@ -63,14 +63,32 @@
       border-color: #ccc;
     }
 
-    /* Tabs (minimal clean pills) */
+    /* Highlighted Mobile Signup Button */
+    .top-buttons a.highlight {
+      background: #007aff; /* Apple-style blue */
+      color: #fff;
+      border-color: #007aff;
+      box-shadow: 0 2px 6px rgba(0,122,255,0.2);
+      font-weight: 600;
+    }
+    .top-buttons a.highlight:hover {
+      background: #005ecb;
+      border-color: #005ecb;
+    }
+
+    /* Tabs section */
+    .tabs-container {
+      background: #f9f9f9;
+      padding: 25px 15px 10px;
+    }
+
+    /* Tabs (clean pills) */
     .tabs {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      background: #f9f9f9;
-      padding: 25px 15px;
       gap: 12px;
+      margin-bottom: 15px;
     }
 
     .tab {
@@ -94,6 +112,14 @@
       color: #fff;
       border-color: #000;
       box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    }
+
+    /* Thin divider line under tabs */
+    .divider {
+      width: 80%;
+      height: 1px;
+      background: #e5e5e5;
+      margin: 0 auto 30px;
     }
 
     /* Player container */
@@ -157,15 +183,18 @@
   <!-- Top navigation buttons -->
   <div class="top-buttons">
     <a href="https://www.denverracingsocial.com" target="_blank">⬅ Back to DRS Website</a>
-    <a href="https://www.denverracingsocial.com/mrutoday" target="_blank">🏆 Mobile Racing Unit Signup / Queue / Leaderboard</a>
+    <a href="https://www.denverracingsocial.com/mrutoday" target="_blank" class="highlight">🏆 Mobile Racing Unit Signup / Queue / Leaderboard</a>
   </div>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <div class="tab" data-target="broadcast">🎥 DRS Main Broadcast</div>
-    <div class="tab" data-target="centennial">🏎️ Centennial Clubhouse</div>
-    <div class="tab" data-target="lafayette">🏎 Lafayette Clubhouse</div>
-    <div class="tab" data-target="mu1">🏆 Mobile Racing Unit</div>
+  <!-- Tabs container with divider -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <div class="tab" data-target="broadcast">🎥 DRS Main Broadcast</div>
+      <div class="tab" data-target="centennial">🏎️ Centennial Clubhouse</div>
+      <div class="tab" data-target="lafayette">🏎 Lafayette Clubhouse</div>
+      <div class="tab" data-target="mu1">🏆 Mobile Racing Unit</div>
+    </div>
+    <div class="divider"></div>
   </div>
 
   <!-- Twitch Players -->
@@ -256,4 +285,3 @@
   </script>
 </body>
 </html>
-
