@@ -7,22 +7,31 @@
   <style>
     /* Base styles */
     body {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      background: #f7f7f7; /* light grey background */
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background: #f9f9f9; /* clean light grey */
       color: #333;
       margin: 0;
       padding: 0;
       text-align: center;
     }
 
+    /* Logo badge */
+    .logo-container {
+      padding: 40px 20px 10px;
+    }
+    .logo-container img {
+      width: 120px;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
     h1 {
-      padding: 30px 20px;
-      margin: 0;
-      background: #fff;
+      margin: 10px 0 0;
       font-size: 2rem;
       font-weight: 500;
       letter-spacing: 0.5px;
-      border-bottom: 1px solid #e0e0e0;
+      color: #111;
     }
 
     /* Top buttons (clean + upscale) */
@@ -31,57 +40,60 @@
       flex-wrap: wrap;
       justify-content: center;
       gap: 15px;
-      padding: 20px;
+      padding: 25px;
       background: #fff;
+      border-top: 1px solid #eee;
+      border-bottom: 1px solid #eee;
     }
 
     .top-buttons a {
       background: #ffffff;
       color: #333;
       text-decoration: none;
-      padding: 12px 20px;
-      border-radius: 6px;
+      padding: 12px 24px;
+      border-radius: 8px;
       font-weight: 500;
-      border: 1px solid #ddd;
+      border: 1px solid #e0e0e0;
       transition: all 0.2s ease-in-out;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
     .top-buttons a:hover {
-      background: #f0f0f0;
+      background: #f5f5f5;
       border-color: #ccc;
     }
 
-    /* Tabs (minimal clean buttons) */
+    /* Tabs (minimal clean pills) */
     .tabs {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      background: #f7f7f7;
-      padding: 15px;
-      gap: 10px;
+      background: #f9f9f9;
+      padding: 25px 15px;
+      gap: 12px;
     }
 
     .tab {
-      padding: 12px 18px;
+      padding: 12px 24px;
       cursor: pointer;
       font-size: 1rem;
       color: #555;
       background: #fff;
       border: 1px solid #ddd;
-      border-radius: 6px;
-      transition: all 0.2s ease;
+      border-radius: 30px;
+      transition: all 0.25s ease;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     }
 
     .tab:hover {
-      background: #f0f0f0;
+      background: #f5f5f5;
     }
 
     .tab.active {
-      background: #333;
+      background: #000;
       color: #fff;
-      border-color: #333;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border-color: #000;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
     }
 
     /* Player container */
@@ -89,11 +101,11 @@
       display: none;
       margin: 30px auto;
       max-width: 1000px;
-      width: 95%;
+      width: 92%;
       background: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
     }
 
     .player.active {
@@ -104,31 +116,42 @@
     iframe {
       width: 100%;
       height: 60vh;
-      min-height: 320px;
+      min-height: 340px;
       border: none;
-      border-radius: 6px;
+      border-radius: 12px;
     }
 
     /* Mobile tweaks */
     @media (max-width: 600px) {
       .tab {
-        flex: 1 1 100%;
+        flex: 1 1 auto;
         text-align: center;
+        padding: 12px;
       }
       h1 {
         font-size: 1.6rem;
       }
       .top-buttons {
         flex-direction: column;
-        padding: 10px;
+        padding: 15px;
       }
       .top-buttons a {
         width: 90%;
+      }
+      .logo-container img {
+        width: 90px;
       }
     }
   </style>
 </head>
 <body>
+
+  <!-- Logo Badge -->
+  <div class="logo-container">
+    <img src="https://static.wixstatic.com/media/8c955c_1f0a3e74b34a462b92387217a91541ca~mv2.png" alt="Denver Racing Social Logo">
+  </div>
+
+  <!-- Page Title -->
   <h1>Denver Racing Social Live Streams</h1>
 
   <!-- Top navigation buttons -->
@@ -233,3 +256,4 @@
   </script>
 </body>
 </html>
+
