@@ -1,287 +1,204 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Denver Racing Social Streams</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    /* Base styles */
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-      background: #f9f9f9;
-      color: #333;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
+"use client"
 
-    /* Logo badge */
-    .logo-container {
-      padding: 40px 20px 10px;
-    }
-    .logo-container img {
-      width: 120px;
-      height: auto;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
+import { useState, useEffect } from "react"
 
-    h1 {
-      margin: 10px 0 0;
-      font-size: 2rem;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-      color: #111;
-    }
+interface Channel {
+  id: string
+  target: string
+}
 
-    /* Top buttons */
-    .top-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 15px;
-      padding: 25px;
-      background: #fff;
-      border-top: 1px solid #eee;
-      border-bottom: 1px solid #eee;
-    }
+const channels: Channel[] = [
+  { id: "denverracingsocial", target: "broadcast" },
+  { id: "drscentennial", target: "centennial" },
+  { id: "drswatsonmills", target: "lafayette" },
+  { id: "denverracingsocialmu1", target: "mu1" },
+]
 
-    .top-buttons a {
-      background: #ffffff;
-      color: #333;
-      text-decoration: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: 500;
-      border: 1px solid #e0e0e0;
-      transition: all 0.2s ease-in-out;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
+export default function DRSTwitchPage() {
+  const [activeTab, setActiveTab] = useState<string>("broadcast")
 
-    .top-buttons a:hover {
-      background: #f5f5f5;
-      border-color: #ccc;
-    }
+  const activateTab = (targetId: string) => {
+    setActiveTab(targetId)
+  }
 
-    /* Highlighted Mobile Signup Button */
-    .top-buttons a.highlight {
-      background: #007aff; /* Apple-style blue */
-      color: #fff;
-      border-color: #007aff;
-      box-shadow: 0 2px 6px rgba(0,122,255,0.2);
-      font-weight: 600;
-    }
-    .top-buttons a.highlight:hover {
-      background: #005ecb;
-      border-color: #005ecb;
-    }
+  // Twitch API Auto-Detect Live Streams
+  const checkLiveChannels = async () => {
+    const clientId = "6lwz7yvyfmlccmybi4vkbqhootlyrw"
+    const clientSecret = "jr8in3gfdb4sg26mdhrbqrz6lu16dc"
 
-    /* Tabs section */
-    .tabs-container {
-      background: #f9f9f9;
-      padding: 25px 15px 10px;
-    }
+    try {
+      // Get App Access Token
+      const tokenRes = await fetch(
+        `https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`,
+        {
+          method: "POST",
+        },
+      )
+      const tokenData = await tokenRes.json()
+      const accessToken = tokenData.access_token
 
-    /* Tabs (clean pills) */
-    .tabs {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 15px;
-    }
+      // Build query for all channels
+      const loginParams = channels.map((c) => `user_login=${c.id}`).join("&")
 
-    .tab {
-      padding: 12px 24px;
-      cursor: pointer;
-      font-size: 1rem;
-      color: #555;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 30px;
-      transition: all 0.25s ease;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    }
+      const liveRes = await fetch(`https://api.twitch.tv/helix/streams?${loginParams}`, {
+        headers: {
+          "Client-ID": clientId,
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
 
-    .tab:hover {
-      background: #f5f5f5;
-    }
+      const liveData = await liveRes.json()
+      const liveIds = new Set(liveData.data.map((s: any) => s.user_login))
 
-    .tab.active {
-      background: #000;
-      color: #fff;
-      border-color: #000;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-    }
-
-    /* Thin divider line under tabs */
-    .divider {
-      width: 80%;
-      height: 1px;
-      background: #e5e5e5;
-      margin: 0 auto 30px;
-    }
-
-    /* Player container */
-    .player {
-      display: none;
-      margin: 30px auto;
-      max-width: 1000px;
-      width: 92%;
-      background: #fff;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-    }
-
-    .player.active {
-      display: block;
-    }
-
-    /* Twitch iframe responsive */
-    iframe {
-      width: 100%;
-      height: 60vh;
-      min-height: 340px;
-      border: none;
-      border-radius: 12px;
-    }
-
-    /* Mobile tweaks */
-    @media (max-width: 600px) {
-      .tab {
-        flex: 1 1 auto;
-        text-align: center;
-        padding: 12px;
+      // Find the first live channel by priority
+      let liveTarget = null
+      for (const c of channels) {
+        if (liveIds.has(c.id)) {
+          liveTarget = c.target
+          break
+        }
       }
-      h1 {
-        font-size: 1.6rem;
+
+      if (liveTarget) {
+        activateTab(liveTarget)
+      } else {
+        activateTab("broadcast") // default if none live
       }
-      .top-buttons {
-        flex-direction: column;
-        padding: 15px;
-      }
-      .top-buttons a {
-        width: 90%;
-      }
-      .logo-container img {
-        width: 90px;
-      }
+    } catch (err) {
+      console.error("Twitch API Error:", err)
+      activateTab("broadcast") // fallback
     }
-  </style>
-</head>
-<body>
+  }
 
-  <!-- Logo Badge -->
-  <div class="logo-container">
-    <img src="https://static.wixstatic.com/media/8c955c_1f0a3e74b34a462b92387217a91541ca~mv2.png" alt="Denver Racing Social Logo">
-  </div>
+  useEffect(() => {
+    checkLiveChannels()
+  }, [])
 
-  <!-- Page Title -->
-  <h1>Denver Racing Social Live Streams</h1>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-50 to-blue-50 relative overflow-hidden">
+      {/* Light gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white/30 to-slate-100/50"></div>
 
-  <!-- Top navigation buttons -->
-  <div class="top-buttons">
-    <a href="https://www.denverracingsocial.com" target="_blank">⬅ Back to DRS Website</a>
-    <a href="https://www.denverracingsocial.com/mrutoday" target="_blank" class="highlight">🏆 Mobile Racing Unit Signup / Queue / Leaderboard</a>
-  </div>
+      <div className="relative z-10">
+        {/* Logo Section */}
+        <div className="pt-10 pb-4 px-5 text-center">
+          <div className="inline-block p-4 bg-white/80 backdrop-blur-md rounded-3xl border border-gray-200/50 shadow-xl hover:bg-white/90 transition-all duration-500">
+            <img
+              src="https://static.wixstatic.com/media/8c955c_1f0a3e74b34a462b92387217a91541ca~mv2.png"
+              alt="Denver Racing Social Logo"
+              className="w-28 h-auto"
+            />
+          </div>
+          <h1 className="mt-6 text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+            Denver Racing Social Live Streams
+          </h1>
+        </div>
 
-  <!-- Tabs container with divider -->
-  <div class="tabs-container">
-    <div class="tabs">
-      <div class="tab" data-target="broadcast">🎥 DRS Main Broadcast</div>
-      <div class="tab" data-target="centennial">🏎️ Centennial Clubhouse</div>
-      <div class="tab" data-target="lafayette">🏎 Lafayette Clubhouse</div>
-      <div class="tab" data-target="mu1">🏆 Mobile Racing Unit</div>
+        {/* Top Navigation Buttons with Apple Design */}
+        <div className="px-5 pb-8">
+          <div className="max-w-4xl mx-auto bg-white/80 backdrop-blur-xl rounded-[2rem] border border-gray-200/50 shadow-2xl p-8 hover:bg-white/90 transition-all duration-500">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
+              <a
+                href="https://www.denverracingsocial.com"
+                target="_blank"
+                className="px-8 py-3 bg-gray-100/80 hover:bg-gray-200/80 backdrop-blur-sm rounded-full border border-gray-300/50 text-gray-800 font-medium text-sm transition-all duration-300 hover:scale-105 hover:border-gray-400/50 hover:shadow-lg"
+                rel="noreferrer"
+              >
+                ← Back to DRS Website
+              </a>
+
+              <a
+                href="https://www.denverracingsocial.com/mrutoday"
+                target="_blank"
+                className="px-10 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold text-sm rounded-full shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-blue-500/30 animate-pulse"
+                rel="noreferrer"
+              >
+                🏆 Sign Up - Mobile Racing Unit
+              </a>
+
+              <a
+                href="https://www.denverracingsocial.com/mrutoday"
+                target="_blank"
+                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-semibold text-xs rounded-full shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-orange-500/30 border-2 border-orange-400/50"
+                rel="noreferrer"
+              >
+                📊 Position & Leaderboard
+              </a>
+            </div>
+
+            {/* Additional emphasis for QR code users */}
+            <div className="mt-6 text-center">
+              <p className="text-gray-600 text-xs font-medium">
+                Scanned our QR code? Click the blue button above to join the racing queue!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs Section with Apple Design */}
+        <div className="px-5 pb-8">
+          <div className="max-w-6xl mx-auto bg-white/80 backdrop-blur-xl rounded-[2rem] border border-gray-200/50 shadow-2xl p-8 hover:bg-white/90 transition-all duration-500">
+            <div className="flex flex-wrap justify-center gap-3 mb-8">
+              {[
+                { target: "broadcast", label: "🎥 DRS Main Broadcast" },
+                { target: "centennial", label: "🏎️ Centennial Clubhouse" },
+                { target: "lafayette", label: "🏎 Lafayette Clubhouse" },
+                { target: "mu1", label: "🏆 Mobile Racing Unit" },
+              ].map((tab) => (
+                <button
+                  key={tab.target}
+                  onClick={() => activateTab(tab.target)}
+                  className={`px-5 py-2 text-xs font-medium rounded-full transition-all duration-300 border ${
+                    activeTab === tab.target
+                      ? "bg-gray-900 text-white border-gray-900 shadow-lg scale-105"
+                      : "bg-white/80 text-gray-800 border-gray-300/50 hover:bg-gray-100/80 hover:scale-105 hover:border-gray-400/50 backdrop-blur-sm"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="bg-gray-900/90 backdrop-blur-sm rounded-3xl border border-gray-300/30 p-6 shadow-xl">
+              {/* Broadcast Player */}
+              {activeTab === "broadcast" && (
+                <iframe
+                  src="https://player.twitch.tv/?channel=denverracingsocial&parent=denverracingsocial.github.io"
+                  allowFullScreen
+                  className="w-full h-[60vh] min-h-[340px]"
+                />
+              )}
+
+              {/* Centennial Player */}
+              {activeTab === "centennial" && (
+                <iframe
+                  src="https://player.twitch.tv/?channel=drscentennial&parent=denverracingsocial.github.io"
+                  allowFullScreen
+                  className="w-full h-[60vh] min-h-[340px]"
+                />
+              )}
+
+              {/* Lafayette Player */}
+              {activeTab === "lafayette" && (
+                <iframe
+                  src="https://player.twitch.tv/?channel=drswatsonmills&parent=denverracingsocial.github.io"
+                  allowFullScreen
+                  className="w-full h-[60vh] min-h-[340px]"
+                />
+              )}
+
+              {/* Mobile Racing Unit Player */}
+              {activeTab === "mu1" && (
+                <iframe
+                  src="https://player.twitch.tv/?channel=denverracingsocialmu1&parent=denverracingsocial.github.io"
+                  allowFullScreen
+                  className="w-full h-[60vh] min-h-[340px]"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="divider"></div>
-  </div>
-
-  <!-- Twitch Players -->
-  <div id="broadcast" class="player">
-    <iframe src="https://player.twitch.tv/?channel=denverracingsocial&parent=denverracingsocial.github.io" allowfullscreen></iframe>
-  </div>
-  <div id="centennial" class="player">
-    <iframe src="https://player.twitch.tv/?channel=drscentennial&parent=denverracingsocial.github.io" allowfullscreen></iframe>
-  </div>
-  <div id="lafayette" class="player">
-    <iframe src="https://player.twitch.tv/?channel=drswatsonmills&parent=denverracingsocial.github.io" allowfullscreen></iframe>
-  </div>
-  <div id="mu1" class="player">
-    <iframe src="https://player.twitch.tv/?channel=denverracingsocialmu1&parent=denverracingsocial.github.io" allowfullscreen></iframe>
-  </div>
-
-  <script>
-    const channels = [
-      {id: "denverracingsocial", target: "broadcast"},
-      {id: "drscentennial", target: "centennial"},
-      {id: "drswatsonmills", target: "lafayette"},
-      {id: "denverracingsocialmu1", target: "mu1"}
-    ];
-
-    const tabs = document.querySelectorAll('.tab');
-    const players = document.querySelectorAll('.player');
-
-    function activateTab(targetId) {
-      tabs.forEach(t => t.classList.remove('active'));
-      players.forEach(p => p.classList.remove('active'));
-      document.querySelector(`.tab[data-target="${targetId}"]`).classList.add('active');
-      document.getElementById(targetId).classList.add('active');
-    }
-
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        activateTab(tab.dataset.target);
-      });
-    });
-
-    // Twitch API Auto-Detect Live Streams
-    async function checkLiveChannels() {
-      const clientId = "6lwz7yvyfmlccmybi4vkbqhootlyrw";  // <-- Your Client ID
-      const clientSecret = "jr8in3gfdb4sg26mdhrbqrz6lu16dc"; // <-- Replace with your Client Secret
-
-      try {
-        // Get App Access Token
-        const tokenRes = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`, {method: "POST"});
-        const tokenData = await tokenRes.json();
-        const accessToken = tokenData.access_token;
-
-        // Build query for all channels
-        const loginParams = channels.map(c => `user_login=${c.id}`).join("&");
-
-        const liveRes = await fetch(`https://api.twitch.tv/helix/streams?${loginParams}`, {
-          headers: {
-            "Client-ID": clientId,
-            "Authorization": `Bearer ${accessToken}`
-          }
-        });
-
-        const liveData = await liveRes.json();
-        const liveIds = new Set(liveData.data.map(s => s.user_login));
-
-        // Find the first live channel by priority
-        let liveTarget = null;
-        for (let c of channels) {
-          if (liveIds.has(c.id)) {
-            liveTarget = c.target;
-            break;
-          }
-        }
-
-        if (liveTarget) {
-          activateTab(liveTarget);
-        } else {
-          activateTab("broadcast"); // default if none live
-        }
-
-      } catch (err) {
-        console.error("Twitch API Error:", err);
-        activateTab("broadcast"); // fallback
-      }
-    }
-
-    // Run live check on load
-    checkLiveChannels();
-  </script>
-</body>
-</html>
+  )
+}
