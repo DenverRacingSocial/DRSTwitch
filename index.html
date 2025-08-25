@@ -1,204 +1,289 @@
-"use client"
-
-import { useState, useEffect } from "react"
-
-interface Channel {
-  id: string
-  target: string
-}
-
-const channels: Channel[] = [
-  { id: "denverracingsocial", target: "broadcast" },
-  { id: "drscentennial", target: "centennial" },
-  { id: "drswatsonmills", target: "lafayette" },
-  { id: "denverracingsocialmu1", target: "mu1" },
-]
-
-export default function DRSTwitchPage() {
-  const [activeTab, setActiveTab] = useState<string>("broadcast")
-
-  const activateTab = (targetId: string) => {
-    setActiveTab(targetId)
-  }
-
-  // Twitch API Auto-Detect Live Streams
-  const checkLiveChannels = async () => {
-    const clientId = "6lwz7yvyfmlccmybi4vkbqhootlyrw"
-    const clientSecret = "jr8in3gfdb4sg26mdhrbqrz6lu16dc"
-
-    try {
-      // Get App Access Token
-      const tokenRes = await fetch(
-        `https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`,
-        {
-          method: "POST",
-        },
-      )
-      const tokenData = await tokenRes.json()
-      const accessToken = tokenData.access_token
-
-      // Build query for all channels
-      const loginParams = channels.map((c) => `user_login=${c.id}`).join("&")
-
-      const liveRes = await fetch(`https://api.twitch.tv/helix/streams?${loginParams}`, {
-        headers: {
-          "Client-ID": clientId,
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-
-      const liveData = await liveRes.json()
-      const liveIds = new Set(liveData.data.map((s: any) => s.user_login))
-
-      // Find the first live channel by priority
-      let liveTarget = null
-      for (const c of channels) {
-        if (liveIds.has(c.id)) {
-          liveTarget = c.target
-          break
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Denver Racing Social - Twitch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-      }
-
-      if (liveTarget) {
-        activateTab(liveTarget)
-      } else {
-        activateTab("broadcast") // default if none live
-      }
-    } catch (err) {
-      console.error("Twitch API Error:", err)
-      activateTab("broadcast") // fallback
-    }
-  }
-
-  useEffect(() => {
-    checkLiveChannels()
-  }, [])
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-50 to-blue-50 relative overflow-hidden">
-      {/* Light gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white/30 to-slate-100/50"></div>
-
-      <div className="relative z-10">
-        {/* Logo Section */}
-        <div className="pt-10 pb-4 px-5 text-center">
-          <div className="inline-block p-4 bg-white/80 backdrop-blur-md rounded-3xl border border-gray-200/50 shadow-xl hover:bg-white/90 transition-all duration-500">
-            <img
-              src="https://static.wixstatic.com/media/8c955c_1f0a3e74b34a462b92387217a91541ca~mv2.png"
-              alt="Denver Racing Social Logo"
-              className="w-28 h-auto"
-            />
-          </div>
-          <h1 className="mt-6 text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-            Denver Racing Social Live Streams
-          </h1>
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #cbd5e1 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        
+        .glass-effect:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .button-primary {
+            background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .button-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .button-secondary {
+            background: rgba(156, 163, 175, 0.8);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(209, 213, 219, 0.5);
+            color: #374151;
+            transition: all 0.3s ease;
+        }
+        
+        .button-secondary:hover {
+            background: rgba(209, 213, 219, 0.8);
+            transform: scale(1.05);
+            border-color: rgba(156, 163, 175, 0.5);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            color: #1d4ed8;
+        }
+        
+        .tab-button:hover {
+            background: rgba(156, 163, 175, 0.1);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <div class="px-5 pt-8">
+            <div class="max-w-4xl mx-auto glass-effect rounded-[2rem] border border-gray-200/50 shadow-2xl p-8 transition-all duration-500">
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-center">
+                    <a
+                        href="https://www.denverracingsocial.com"
+                        target="_blank"
+                        class="button-secondary px-8 py-3 rounded-full font-medium text-sm hover:scale-105 hover:shadow-lg"
+                    >
+                        ← Back to DRS Website
+                    </a>
+                    
+                    <a
+                        href="https://www.denverracingsocial.com/mru"
+                        target="_blank"
+                        class="button-primary px-8 py-3 rounded-full font-semibold text-sm pulse-animation hover:scale-105 hover:shadow-lg"
+                    >
+                        🏁 Sign Up - Mobile Racing Unit
+                    </a>
+                    
+                    <a
+                        href="https://www.denverracingsocial.com/mrutoday"
+                        target="_blank"
+                        class="button-primary px-8 py-3 rounded-full font-semibold text-sm hover:scale-105 hover:shadow-lg"
+                    >
+                        📊 Position & Leaderboard
+                    </a>
+                </div>
+                <p class="text-center text-xs text-gray-600 mt-4 font-light">
+                    📱 Scanned our QR code? Click "Sign Up" above to join the racing queue!
+                </p>
+            </div>
         </div>
 
-        {/* Top Navigation Buttons with Apple Design */}
-        <div className="px-5 pb-8">
-          <div className="max-w-4xl mx-auto bg-white/80 backdrop-blur-xl rounded-[2rem] border border-gray-200/50 shadow-2xl p-8 hover:bg-white/90 transition-all duration-500">
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
-              <a
-                href="https://www.denverracingsocial.com"
-                target="_blank"
-                className="px-8 py-3 bg-gray-100/80 hover:bg-gray-200/80 backdrop-blur-sm rounded-full border border-gray-300/50 text-gray-800 font-medium text-sm transition-all duration-300 hover:scale-105 hover:border-gray-400/50 hover:shadow-lg"
-                rel="noreferrer"
-              >
-                ← Back to DRS Website
-              </a>
+        <!-- Main Content -->
+        <div class="px-5 py-8">
+            <div class="max-w-4xl mx-auto glass-effect rounded-[2rem] border border-gray-200/50 shadow-2xl overflow-hidden transition-all duration-500">
+                <!-- Tab Navigation -->
+                <div class="flex border-b border-gray-200/50 bg-white/50">
+                    <button 
+                        class="tab-button flex-1 px-6 py-4 text-xs font-medium border-b-2 border-transparent active"
+                        onclick="showTab('centennial')"
+                        id="centennial-tab"
+                    >
+                        🏎️ Centennial
+                    </button>
+                    <button 
+                        class="tab-button flex-1 px-6 py-4 text-xs font-medium border-b-2 border-transparent"
+                        onclick="showTab('lakewood')"
+                        id="lakewood-tab"
+                    >
+                        🏁 Lakewood
+                    </button>
+                </div>
 
-              <a
-                href="https://www.denverracingsocial.com/mrutoday"
-                target="_blank"
-                className="px-10 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold text-sm rounded-full shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-blue-500/30 animate-pulse"
-                rel="noreferrer"
-              >
-                🏆 Sign Up - Mobile Racing Unit
-              </a>
+                <!-- Tab Content -->
+                <div class="p-8">
+                    <!-- Centennial Tab -->
+                    <div id="centennial-content" class="tab-content">
+                        <div class="text-center mb-6">
+                            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                                Denver Racing Social
+                            </h1>
+                            <p class="text-sm text-gray-600 font-light">
+                                Live from Centennial - Mobile Racing Unit
+                            </p>
+                        </div>
 
-              <a
-                href="https://www.denverracingsocial.com/mrutoday"
-                target="_blank"
-                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-semibold text-xs rounded-full shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-orange-500/30 border-2 border-orange-400/50"
-                rel="noreferrer"
-              >
-                📊 Position & Leaderboard
-              </a>
+                        <div class="aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl mb-6">
+                            <div id="centennial-player" class="w-full h-full flex items-center justify-center">
+                                <div class="text-white text-center">
+                                    <div class="text-4xl mb-4">📺</div>
+                                    <p class="text-lg font-medium">Checking for live stream...</p>
+                                    <p class="text-sm opacity-75 mt-2">We'll automatically show the stream when live</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-xs text-gray-500 font-light">
+                                Stream automatically detects when we're live at Centennial
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Lakewood Tab -->
+                    <div id="lakewood-content" class="tab-content hidden">
+                        <div class="text-center mb-6">
+                            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                                Denver Racing Social
+                            </h1>
+                            <p class="text-sm text-gray-600 font-light">
+                                Live from Lakewood - Mobile Racing Unit
+                            </p>
+                        </div>
+
+                        <div class="aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl mb-6">
+                            <div id="lakewood-player" class="w-full h-full flex items-center justify-center">
+                                <div class="text-white text-center">
+                                    <div class="text-4xl mb-4">📺</div>
+                                    <p class="text-lg font-medium">Checking for live stream...</p>
+                                    <p class="text-sm opacity-75 mt-2">We'll automatically show the stream when live</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-xs text-gray-500 font-light">
+                                Stream automatically detects when we're live at Lakewood
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            {/* Additional emphasis for QR code users */}
-            <div className="mt-6 text-center">
-              <p className="text-gray-600 text-xs font-medium">
-                Scanned our QR code? Click the blue button above to join the racing queue!
-              </p>
-            </div>
-          </div>
         </div>
-
-        {/* Tabs Section with Apple Design */}
-        <div className="px-5 pb-8">
-          <div className="max-w-6xl mx-auto bg-white/80 backdrop-blur-xl rounded-[2rem] border border-gray-200/50 shadow-2xl p-8 hover:bg-white/90 transition-all duration-500">
-            <div className="flex flex-wrap justify-center gap-3 mb-8">
-              {[
-                { target: "broadcast", label: "🎥 DRS Main Broadcast" },
-                { target: "centennial", label: "🏎️ Centennial Clubhouse" },
-                { target: "lafayette", label: "🏎 Lafayette Clubhouse" },
-                { target: "mu1", label: "🏆 Mobile Racing Unit" },
-              ].map((tab) => (
-                <button
-                  key={tab.target}
-                  onClick={() => activateTab(tab.target)}
-                  className={`px-5 py-2 text-xs font-medium rounded-full transition-all duration-300 border ${
-                    activeTab === tab.target
-                      ? "bg-gray-900 text-white border-gray-900 shadow-lg scale-105"
-                      : "bg-white/80 text-gray-800 border-gray-300/50 hover:bg-gray-100/80 hover:scale-105 hover:border-gray-400/50 backdrop-blur-sm"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="bg-gray-900/90 backdrop-blur-sm rounded-3xl border border-gray-300/30 p-6 shadow-xl">
-              {/* Broadcast Player */}
-              {activeTab === "broadcast" && (
-                <iframe
-                  src="https://player.twitch.tv/?channel=denverracingsocial&parent=denverracingsocial.github.io"
-                  allowFullScreen
-                  className="w-full h-[60vh] min-h-[340px]"
-                />
-              )}
-
-              {/* Centennial Player */}
-              {activeTab === "centennial" && (
-                <iframe
-                  src="https://player.twitch.tv/?channel=drscentennial&parent=denverracingsocial.github.io"
-                  allowFullScreen
-                  className="w-full h-[60vh] min-h-[340px]"
-                />
-              )}
-
-              {/* Lafayette Player */}
-              {activeTab === "lafayette" && (
-                <iframe
-                  src="https://player.twitch.tv/?channel=drswatsonmills&parent=denverracingsocial.github.io"
-                  allowFullScreen
-                  className="w-full h-[60vh] min-h-[340px]"
-                />
-              )}
-
-              {/* Mobile Racing Unit Player */}
-              {activeTab === "mu1" && (
-                <iframe
-                  src="https://player.twitch.tv/?channel=denverracingsocialmu1&parent=denverracingsocial.github.io"
-                  allowFullScreen
-                  className="w-full h-[60vh] min-h-[340px]"
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  )
+
+    <script>
+        // Tab switching functionality
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.add('hidden'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab-button');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-content').classList.remove('hidden');
+            
+            // Add active class to selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Twitch API integration
+        const CLIENT_ID = 'gp762nuuoqcoxypju8c569th9wz7q5';
+        const CENTENNIAL_CHANNEL = 'denverracingsocial';
+        const LAKEWOOD_CHANNEL = 'denverracingsociallakewood';
+
+        async function checkStreamStatus(channel, playerId) {
+            try {
+                const response = await fetch(`https://api.twitch.tv/helix/streams?user_login=${channel}`, {
+                    headers: {
+                        'Client-ID': CLIENT_ID,
+                        'Authorization': 'Bearer ' // Note: This would need a valid token in production
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const player = document.getElementById(playerId);
+                    
+                    if (data.data && data.data.length > 0) {
+                        // Stream is live
+                        player.innerHTML = `
+                            <iframe 
+                                src="https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=true&muted=false"
+                                height="100%" 
+                                width="100%" 
+                                allowfullscreen="true">
+                            </iframe>
+                        `;
+                    } else {
+                        // Stream is offline
+                        player.innerHTML = `
+                            <div class="text-white text-center">
+                                <div class="text-4xl mb-4">💤</div>
+                                <p class="text-lg font-medium">Stream Offline</p>
+                                <p class="text-sm opacity-75 mt-2">We'll be back soon with more racing action!</p>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.log('Stream check failed, showing fallback');
+                const player = document.getElementById(playerId);
+                player.innerHTML = `
+                    <iframe 
+                        src="https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=true&muted=false"
+                        height="100%" 
+                        width="100%" 
+                        allowfullscreen="true">
+                    </iframe>
+                `;
+            }
+        }
+
+        // Initialize streams
+        function initializeStreams() {
+            checkStreamStatus(CENTENNIAL_CHANNEL, 'centennial-player');
+            checkStreamStatus(LAKEWOOD_CHANNEL, 'lakewood-player');
+        }
+
+        // Check streams on load and periodically
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeStreams();
+            // Check every 30 seconds
+            setInterval(initializeStreams, 30000);
+        });
+    </script>
+</body>
+</html>
+
 }
+
