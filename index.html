@@ -36,7 +36,7 @@
         
         .button-primary:hover {
             transform: scale(1.05);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
         
         .button-secondary {
@@ -51,8 +51,6 @@
         .button-secondary:hover {
             background: rgba(209, 213, 219, 0.8);
             transform: scale(1.05);
-            border-color: rgba(156, 163, 175, 0.5);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         
         .tab-button {
@@ -63,10 +61,6 @@
             background: rgba(59, 130, 246, 0.1);
             border-color: #3b82f6;
             color: #1d4ed8;
-        }
-        
-        .tab-button:hover {
-            background: rgba(156, 163, 175, 0.1);
         }
         
         .pulse-animation {
@@ -83,12 +77,12 @@
     <div class="min-h-screen">
         <!-- Header -->
         <div class="px-5 pt-8">
-            <div class="max-w-4xl mx-auto glass-effect rounded-[2rem] border border-gray-200/50 shadow-2xl p-8 transition-all duration-500">
+            <div class="max-w-4xl mx-auto glass-effect rounded-3xl border border-gray-200 shadow-2xl p-8">
                 <div class="flex flex-col md:flex-row gap-4 items-center justify-center">
                     <a
                         href="https://www.denverracingsocial.com"
                         target="_blank"
-                        class="button-secondary px-8 py-3 rounded-full font-medium text-sm hover:scale-105 hover:shadow-lg"
+                        class="button-secondary px-8 py-3 rounded-full font-medium text-sm"
                     >
                         ← Back to DRS Website
                     </a>
@@ -96,7 +90,7 @@
                     <a
                         href="https://www.denverracingsocial.com/mru"
                         target="_blank"
-                        class="button-primary px-8 py-3 rounded-full font-semibold text-sm pulse-animation hover:scale-105 hover:shadow-lg"
+                        class="button-primary px-8 py-3 rounded-full font-semibold text-sm pulse-animation"
                     >
                         🏁 Sign Up - Mobile Racing Unit
                     </a>
@@ -104,7 +98,7 @@
                     <a
                         href="https://www.denverracingsocial.com/mrutoday"
                         target="_blank"
-                        class="button-primary px-8 py-3 rounded-full font-semibold text-sm hover:scale-105 hover:shadow-lg"
+                        class="button-primary px-8 py-3 rounded-full font-semibold text-sm"
                     >
                         📊 Position & Leaderboard
                     </a>
@@ -117,9 +111,9 @@
 
         <!-- Main Content -->
         <div class="px-5 py-8">
-            <div class="max-w-4xl mx-auto glass-effect rounded-[2rem] border border-gray-200/50 shadow-2xl overflow-hidden transition-all duration-500">
+            <div class="max-w-4xl mx-auto glass-effect rounded-3xl border border-gray-200 shadow-2xl overflow-hidden">
                 <!-- Tab Navigation -->
-                <div class="flex border-b border-gray-200/50 bg-white/50">
+                <div class="flex border-b border-gray-200 bg-white bg-opacity-50">
                     <button 
                         class="tab-button flex-1 px-6 py-4 text-xs font-medium border-b-2 border-transparent active"
                         onclick="showTab('centennial')"
@@ -150,18 +144,18 @@
                         </div>
 
                         <div class="aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl mb-6">
-                            <div id="centennial-player" class="w-full h-full flex items-center justify-center">
-                                <div class="text-white text-center">
-                                    <div class="text-4xl mb-4">📺</div>
-                                    <p class="text-lg font-medium">Checking for live stream...</p>
-                                    <p class="text-sm opacity-75 mt-2">We'll automatically show the stream when live</p>
-                                </div>
-                            </div>
+                            <iframe 
+                                src="https://player.twitch.tv/?channel=denverracingsocial&parent=denverracingsocial.github.io&autoplay=false&muted=false"
+                                height="100%" 
+                                width="100%" 
+                                allowfullscreen="true"
+                                style="border: none;">
+                            </iframe>
                         </div>
 
                         <div class="text-center">
                             <p class="text-xs text-gray-500 font-light">
-                                Stream automatically detects when we're live at Centennial
+                                Live stream from our Centennial location
                             </p>
                         </div>
                     </div>
@@ -178,18 +172,18 @@
                         </div>
 
                         <div class="aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl mb-6">
-                            <div id="lakewood-player" class="w-full h-full flex items-center justify-center">
-                                <div class="text-white text-center">
-                                    <div class="text-4xl mb-4">📺</div>
-                                    <p class="text-lg font-medium">Checking for live stream...</p>
-                                    <p class="text-sm opacity-75 mt-2">We'll automatically show the stream when live</p>
-                                </div>
-                            </div>
+                            <iframe 
+                                src="https://player.twitch.tv/?channel=denverracingsociallakewood&parent=denverracingsocial.github.io&autoplay=false&muted=false"
+                                height="100%" 
+                                width="100%" 
+                                allowfullscreen="true"
+                                style="border: none;">
+                            </iframe>
                         </div>
 
                         <div class="text-center">
                             <p class="text-xs text-gray-500 font-light">
-                                Stream automatically detects when we're live at Lakewood
+                                Live stream from our Lakewood location
                             </p>
                         </div>
                     </div>
@@ -202,12 +196,16 @@
         // Tab switching functionality
         function showTab(tabName) {
             // Hide all tab contents
-            const contents = document.querySelectorAll('.tab-content');
-            contents.forEach(content => content.classList.add('hidden'));
+            var contents = document.querySelectorAll('.tab-content');
+            for (var i = 0; i < contents.length; i++) {
+                contents[i].classList.add('hidden');
+            }
             
             // Remove active class from all tabs
-            const tabs = document.querySelectorAll('.tab-button');
-            tabs.forEach(tab => tab.classList.remove('active'));
+            var tabs = document.querySelectorAll('.tab-button');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
             
             // Show selected tab content
             document.getElementById(tabName + '-content').classList.remove('hidden');
@@ -215,75 +213,6 @@
             // Add active class to selected tab
             document.getElementById(tabName + '-tab').classList.add('active');
         }
-
-        // Twitch API integration
-        const CLIENT_ID = 'gp762nuuoqcoxypju8c569th9wz7q5';
-        const CENTENNIAL_CHANNEL = 'denverracingsocial';
-        const LAKEWOOD_CHANNEL = 'denverracingsociallakewood';
-
-        async function checkStreamStatus(channel, playerId) {
-            try {
-                const response = await fetch(`https://api.twitch.tv/helix/streams?user_login=${channel}`, {
-                    headers: {
-                        'Client-ID': CLIENT_ID,
-                        'Authorization': 'Bearer ' // Note: This would need a valid token in production
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    const player = document.getElementById(playerId);
-                    
-                    if (data.data && data.data.length > 0) {
-                        // Stream is live
-                        player.innerHTML = `
-                            <iframe 
-                                src="https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=true&muted=false"
-                                height="100%" 
-                                width="100%" 
-                                allowfullscreen="true">
-                            </iframe>
-                        `;
-                    } else {
-                        // Stream is offline
-                        player.innerHTML = `
-                            <div class="text-white text-center">
-                                <div class="text-4xl mb-4">💤</div>
-                                <p class="text-lg font-medium">Stream Offline</p>
-                                <p class="text-sm opacity-75 mt-2">We'll be back soon with more racing action!</p>
-                            </div>
-                        `;
-                    }
-                }
-            } catch (error) {
-                console.log('Stream check failed, showing fallback');
-                const player = document.getElementById(playerId);
-                player.innerHTML = `
-                    <iframe 
-                        src="https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=true&muted=false"
-                        height="100%" 
-                        width="100%" 
-                        allowfullscreen="true">
-                    </iframe>
-                `;
-            }
-        }
-
-        // Initialize streams
-        function initializeStreams() {
-            checkStreamStatus(CENTENNIAL_CHANNEL, 'centennial-player');
-            checkStreamStatus(LAKEWOOD_CHANNEL, 'lakewood-player');
-        }
-
-        // Check streams on load and periodically
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeStreams();
-            // Check every 30 seconds
-            setInterval(initializeStreams, 30000);
-        });
     </script>
 </body>
 </html>
-
-}
-
